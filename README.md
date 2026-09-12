@@ -18,6 +18,15 @@
 
 顺带解释一个老问题："明明关了自动更新还是被升"。因为服务端下发的策略能越过手机上的开关，改开关不可靠，让服务器认不出你的版本才可靠。
 
+
+## 完全版 v2.1
+
+`XiaoMi-UPDATE-Disable_v2.1_full.zip`，和 v2.0 的区别：
+
+- 三时机应用：`post-fs-data.sh`（常规 root 开机早期）/ `late-load.sh`（late-load exploit 触发时）/ `service.sh`（boot 完成兜底），哪条路都能生效
+- 没有配置文件也能跑：内置默认 `Love.🌸`，装上重启就有
+- WebUI、还原基准、配置文件路径都与 v2.0 相同
+
 ## 用之前
 
 - KernelSU / Magisk / APatch 任一（只在 KernelSU late-load 模式下实测过）
