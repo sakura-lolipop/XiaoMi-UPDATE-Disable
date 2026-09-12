@@ -54,4 +54,4 @@ KSU late-load 模式下 `post-fs-data.sh` 不执行，原版的 `system.prop` �
 
 改自己设备，风险自担。小米服务端怎么解析不认识的版本号没有公开文档，乱码版好玩，`OS99.99.99.99.XPNCNXM` 稳妥，自己选。
 
-Author: Lotipop
+Author: Lolipop
