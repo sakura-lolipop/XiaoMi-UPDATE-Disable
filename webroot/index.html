@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>版本号自定义</title>
+<style>
+  body{font-family:system-ui,sans-serif;background:#111418;color:#e8eaed;margin:0;padding:16px}
+  h2{font-size:18px;margin:8px 0}
+  .card{background:#1c2026;border-radius:12px;padding:14px;margin:10px 0}
+  label{display:block;font-size:13px;color:#9aa0a6;margin:10px 0 4px}
+  input{width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #3c4043;background:#111418;color:#e8eaed;font-size:15px}
+  input:focus{outline:none;border-color:#8ab4f8}
+  .row{display:flex;gap:8px;margin-top:12px}
+  button{flex:1;padding:11px;border-radius:8px;border:0;font-size:14px;font-weight:600;cursor:pointer}
+  .b-save{background:#8ab4f8;color:#111}
+  .b-apply{background:#81c995;color:#111}
+  .b-def{background:#3c4043;color:#e8eaed}
+  .b-restore{background:#5c5c5c;color:#fff}
+  #log{font-size:12px;font-family:monospace;background:#0d0f12;border-radius:8px;padding:10px;margin-top:12px;white-space:pre-wrap;word-break:break-all;color:#9aa0a6;min-height:60px}
+  .note{font-size:12px;color:#9aa0a6;line-height:1.5}
+</style>
+</head>
+<body>
+<h2>版本号自定义 · XiaoMi-UPDATE-Disable</h2>
+<div class="note">修改系统版本显示（大版本 + XMS 小版本）。「立即应用」需要 KernelSU 内核已加载（先跑 exploit），否则只能保存，重启+exploit 后生效。</div>
+
+<div class="card">
+  <label>大版本 (ro.mi.os.version.incremental / name / build)</label>
+  <input id="osver" placeholder="例如: Love / OS99.99.99.99.XPNCNXM">
+  <label>XMS 小版本 (ro.mi.xms.version.incremental)</label>
+  <input id="xmsver" placeholder="例如: 🌸 / D00 / 樱花">
+  <div class="row">
+    <button class="b-save" onclick="saveConfig()">💾 保存配置</button>
+    <button class="b-apply" onclick="applyNow()">⚡ 立即应用</button>
+  </div>
+  <div class="row">
+    <button class="b-def" onclick="preset('Love','🌸')">🌸 预设</button>
+    <button class="b-def" onclick="preset('OS99.99.99.99.XPNCNXM','C00')">📈 保格式防推</button>
+    <button class="b-restore" onclick="restoreReal()">↩️ 还原真实</button>
+  </div>
+</div>
+
+<div class="card">
+  <label>当前属性状态</label>
+  <div id="log">加载中…</div>
+  <div class="row"><button class="b-def" onclick="refresh()">🔄 刷新状态</button></div>
+</div>
+
+<script>
+var CONF = '/data/adb/love_spoof.conf';
+var KEYS = ['OS_INC','OS_NAME','OS_CODE','BUILD_INC','SYS_INC','XMS_INC'];
+
+function q(s){ return "'" + String(s).replace(/'/g, "'\\''") + "'"; }
+
+function ksuExec(cmd){
+  return new Promise(function(resolve){
+    try{
+      if (typeof $ksu !== 'undefined' && $ksu.exec && $ksu.exec.length <= 1){
+        Promise.resolve($ksu.exec(cmd)).then(function(r){ resolve(r || {}); }).catch(function(e){ resolve({errno:-1,stdout:'',stderr:String(e)}); });
+      } else if (typeof ksu !== 'undefined' && ksu.exec){
+        var cb = 'cb_' + Math.random().toString(36).slice(2);
+        window[cb] = function(errno, stdout, stderr){ resolve({errno:errno, stdout:stdout||'', stderr:stderr||''}); delete window[cb]; };
+        ksu.exec(cmd, '{}', cb);
+      } else { resolve({errno:-1, stdout:'', stderr:'KSU JS API 不可用'}); }
+    }catch(e){ resolve({errno:-1, stdout:'', stderr:String(e)}); }
+  });
+}
+
+function log(msg){
+  document.getElementById('log').textContent += msg + '\n';
+  var el = document.getElementById('log'); el.scrollTop = el.scrollHeight;
+}
+
+function findRp(){
+  return "RP=/data/adb/ksu/bin/resetprop; [ -x $RP ] || RP=/data/adb/magisk/resetprop; [ -x $RP ] || RP=$(command -v resetprop); echo $RP";
+}
+
+function applyProps(){
+  var os = document.getElementById('osver').value;
+  var xms = document.getElementById('xmsver').value;
+  var cmd = findRp() + ' && ' +
+    '$RP ro.mi.os.version.incremental ' + q(os) + ' && ' +
+    '$RP ro.mi.os.version.name ' + q(os) + ' && ' +
+    '$RP ro.mi.os.version.code ' + q(os) + ' && ' +
+    '$RP ro.build.version.incremental ' + q(os) + ' && ' +
+    '$RP ro.system.build.version.incremental ' + q(os) + ' && ' +
+    '$RP ro.mi.xms.version.incremental ' + q(xms) +
+    ' && echo APPLY_OK';
+  return ksuExec(cmd);
+}
+
+function saveConfig(){
+  var os = document.getElementById('osver').value;
+  var xms = document.getElementById('xmsver').value;
+  var body = 'OS_INC=' + q(os) + '\\nOS_NAME=' + q(os) + '\\nOS_CODE=' + q(os) +
+             '\\nBUILD_INC=' + q(os) + '\\nSYS_INC=' + q(os) + '\\nXMS_INC=' + q(xms) + '\\n';
+  var cmd = "cat > " + CONF + " << 'CFGEOF'\n" +
+            "OS_INC='" + os.replace(/'/g, "'\\''") + "'\n" +
+            "OS_NAME='" + os.replace(/'/g, "'\\''") + "'\n" +
+            "OS_CODE='" + os.replace(/'/g, "'\\''") + "'\n" +
+            "BUILD_INC='" + os.replace(/'/g, "'\\''") + "'\n" +
+            "SYS_INC='" + os.replace(/'/g, "'\\''") + "'\n" +
+            "XMS_INC='" + xms.replace(/'/g, "'\\''") + "'\n" +
+            "CFGEOF";
+  ksuExec(cmd).then(function(r){
+    log(r.errno === 0 ? '✅ 配置已保存' : '❌ 保存失败: ' + (r.stderr || r.errno));
+  });
+}
+
+function applyNow(){
+  log('⏳ 应用中…');
+  applyProps().then(function(r){
+    if (r.stdout && r.stdout.indexOf('APPLY_OK') >= 0){ log('✅ 已应用（立即生效）'); refresh(); }
+    else log('❌ 失败: ' + (r.stderr || ('errno=' + r.errno)) + '\n（内核未加载？先跑 exploit）');
+  });
+}
+
+function preset(a, b){
+  document.getElementById('osver').value = a;
+  document.getElementById('xmsver').value = b;
+  saveConfig();
+  log('📋 已填入预设并保存');
+}
+
+function restoreReal(){
+  ksuExec('cat ' + CONF).then(function(r){
+    var m = {}, lines = (r.stdout || '').split('\n');
+    lines.forEach(function(l){ var p = l.indexOf('='); if (p > 0) m[l.slice(0,p)] = l.slice(p+1); });
+    var o = m.ORIG_OS_INC || 'OS4.0.11.0.XPNCNXM';
+    var x = m.ORIG_XMS_INC || 'D00';
+    preset(o, x);
+    log('↩️ 已还原为安装时捕获的真实值（应用后生效）');
+  });
+}
+
+function refresh(){
+  document.getElementById('log').textContent = '';
+  ksuExec(findRp().replace('echo $RP','') + ' ; getprop ro.mi.os.version.incremental ; getprop ro.mi.xms.version.incremental ; getprop ro.build.version.incremental').then(function(r){
+    log(r.stdout ? r.stdout : '（无输出 — 内核未加载？）');
+    if (r.stderr) log('stderr: ' + r.stderr);
+  });
+}
+
+function loadConfig(){
+  ksuExec('cat ' + CONF + ' 2>/dev/null').then(function(r){
+    var m = {}, lines = (r.stdout || '').split('\n');
+    lines.forEach(function(l){ var p = l.indexOf('='); if (p > 0) m[l.slice(0,p)] = l.slice(p+1).replace(/^'|'$/g,''); });
+    document.getElementById('osver').value = m.OS_INC || 'Love';
+    document.getElementById('xmsver').value = m.XMS_INC || '\uD83C\uDF38';
+    refresh();
+  });
+}
+
+// 兼容不同 manager 版本的 xms 默认值（emoji 用 unicode 转义写入）
+loadConfig();
+</script>
+</body>
+</html>
