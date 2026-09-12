@@ -1,0 +1,14 @@
+#!/sbin/sh
+#################
+# Initialization
+#################
+umask 022
+ui_print() { echo "$1"; }
+OUTFD=$2
+ZIPFILE=$3
+mount /data 2>/dev/null
+[ -f /data/adb/magisk/util_functions.sh ] || { ui_print "! 需要 Magisk 20400+ 或 KernelSU"; exit 1; }
+. /data/adb/magisk/util_functions.sh
+[ $MAGISK_VER_CODE -lt 20400 ] && { ui_print "! Magisk 版本过低"; exit 1; }
+install_module
+exit 0
