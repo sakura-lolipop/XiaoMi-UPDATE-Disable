@@ -22,7 +22,7 @@
 </style>
 </head>
 <body>
-<h2>版本号自定义 · XiaoMi-UPDATE-Disable</h2>
+<h2>🎨 版本号自定义</h2>
 <div class="note">修改系统版本显示（大版本 + XMS 小版本）。「立即应用」需要 KernelSU 内核已加载（先跑 exploit），否则只能保存，重启+exploit 后生效。</div>
 
 <div class="card">
@@ -37,7 +37,8 @@
   <div class="row">
     <button class="b-def" onclick="preset('Love','🌸')">🌸 预设</button>
     <button class="b-def" onclick="preset('OS99.99.99.99.XPNCNXM','C00')">📈 保格式防推</button>
-    <button class="b-restore" onclick="restoreReal()">↩️ 还原真实</button>
+    <button class="b-restore" onclick="restoreReal()">↩️ 还原快照</button>
+    <button class="b-def" style="background:#fdd663;color:#111" onclick="smartRestore()">🧠 智能还原</button>
   </div>
 </div>
 
@@ -139,6 +140,52 @@ function refresh(){
   ksuExec(findRp().replace('echo $RP','') + ' ; getprop ro.mi.os.version.incremental ; getprop ro.mi.xms.version.incremental ; getprop ro.build.version.incremental').then(function(r){
     log(r.stdout ? r.stdout : '（无输出 — 内核未加载？）');
     if (r.stderr) log('stderr: ' + r.stderr);
+  });
+}
+
+
+function smartRestore(){
+  log('🧠 智能还原：从 fingerprint 提取真实版本…');
+  ksuExec('getprop ro.build.fingerprint; echo ---; getprop ro.mi.os.version.incremental; getprop ro.mi.xms.version.incremental').then(function(r){
+    if (!r.stdout){ log('❌ 无法读取（内核未加载？先跑 exploit）'); return; }
+    var parts = r.stdout.trim().split('---');
+    var fp = (parts[0]||'').trim();
+    var curOs = (parts[1]||'').trim();
+    var curXms = (parts[2]||'').trim();
+    log('fingerprint: ' + fp);
+    var m = fp.match(/\/(OS\d+(?:\.\d+)*\.[A-Z]+):user\/release-keys$/);
+    if (!m){
+      log('❌ fingerprint 中未提取到合法版本串（格式不符或已被污染），拒绝盲写。');
+      log('   可尝试手动：先跑一次系统更新检查让服务器回显，或用「还原快照」。');
+      return;
+    }
+    var inc = m[1];
+    var nm  = (inc.match(/^(OS\d+\.\d+)/)||['',''])[1];
+    var code= (inc.match(/^OS(\d+)/)||['',''])[1];
+    log('提取: incremental=' + inc + '  name=' + nm + '  code=' + code);
+    if (curOs === inc){ log('ℹ️ 当前属性已是真值，仅同步衍生态与配置文件。'); }
+    else { log('还原: ' + curOs + ' → ' + inc); }
+    var cmd = findRp() + ' && ' +
+      '$RP ro.mi.os.version.incremental ' + q(inc) + ' && ' +
+      '$RP ro.mi.os.version.name ' + q(nm) + ' && ' +
+      '$RP ro.mi.os.version.code ' + q(code) + ' && ' +
+      '$RP ro.build.version.incremental ' + q(inc) + ' && ' +
+      '$RP ro.system.build.version.incremental ' + q(inc) + ' && echo SMART_OK';
+    var esc = function(s){ return s.replace(/'/g, "'\''"); };
+    var conf = "OS_INC='" + esc(inc) + "'\nOS_NAME='" + esc(nm) + "'\nOS_CODE='" + esc(code) +
+               "'\nBUILD_INC='" + esc(inc) + "'\nSYS_INC='" + esc(inc) + "'\nXMS_INC='" + esc(curXms||'D00') +
+               "'\nORIG_OS_INC='" + esc(inc) + "'\nORIG_XMS_INC='" + esc(curXms||'D00') + "'\n";
+    var writeCmd = "cat > " + CONF + " << 'CFGEOF'\n" + conf + "CFGEOF";
+    ksuExec(cmd).then(function(r1){
+      if (r1.stdout && r1.stdout.indexOf('SMART_OK') >= 0){
+        log('✅ 真值已持久化写回');
+        ksuExec(writeCmd).then(function(r2){
+          log(r2.errno === 0 ? '✅ 配置文件同步完成，可安全卸载模块' : '⚠️ 属性已还原但配置写入失败: ' + (r2.stderr||''));
+        });
+      } else {
+        log('❌ 写回失败: ' + (r1.stderr || ('errno=' + r1.errno)));
+      }
+    });
   });
 }
 
