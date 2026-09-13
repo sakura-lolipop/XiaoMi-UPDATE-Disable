@@ -27,6 +27,13 @@
 - 没有配置文件也能跑：内置默认 `Love.🌸`，装上重启就有
 - WebUI、还原基准、配置文件路径都与 v2.0 相同
 
+
+## 完全版 v2.2（智能还原）
+
+- 🧠 智能还原：不改配置文件、不靠安装时快照，直接从未被污染的 `ro.build.fingerprint` 里提取真机版本（fingerprint 内嵌完整版本串且所有模块都不碰它），自动推导 name/code 并持久化写回 —— 刷过机、升过级也能还原到"此刻应有的值"
+- 运行期 resetprop 全部加 `-n`：模块应用版本号只改内存不再落盘，卸载不再留持久残留
+- ⚠️ 历史污染须知：旧版本（v1.x/v2.0/v2.1）的 resetprop 会把改动持久化到 `/data/property/persistent_properties`，卸载模块后值仍在。清除顺序：跑 exploit 拿 root → WebUI「智能还原」→ 确认 getprop 为真值 → 再卸载模块。顺序反了（先卸载）就没有工具能写持久值了
+
 ## 用之前
 
 - KernelSU / Magisk / APatch 任一（只在 KernelSU late-load 模式下实测过）
