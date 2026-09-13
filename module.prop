@@ -1,6 +1,6 @@
 id=updater_love_spoof
 name=Updater Version Spoof (WebUI 自定义)
-version=v2.0-webui
-versionCode=2
+version=v2.2-smart
+versionCode=4
 author=Lolipop
-description=在模块 WebUI 里自由命名系统版本（大版本 + XMS 小版本），支持立即应用、预设、一键还原。应用需 KernelSU 内核已加载（先跑 exploit）。
+description=完全版：WebUI 自定义版本号（大版本+XMS），post-fs-data/late-load/service 三时机自动应用，支持立即生效、预设、智能还原（从 fingerprint 提取真实版本）。运行期不落盘（-n），卸载无残留。
