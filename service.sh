@@ -15,18 +15,18 @@ fi
 (
   while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 2; done
   sleep 3
-  [ -n "$OS_INC" ] && "$RP" -n ro.mi.os.version.incremental "$OS_INC"
-  [ -n "$OS_NAME" ] && "$RP" -n ro.mi.os.version.name "$OS_NAME"
-  [ -n "$OS_CODE" ] && "$RP" -n ro.mi.os.version.code "$OS_CODE"
-  [ -n "$BUILD_INC" ] && "$RP" -n ro.build.version.incremental "$BUILD_INC"
-  [ -n "$SYS_INC" ] && "$RP" -n ro.system.build.version.incremental "$SYS_INC"
-  [ -n "$XMS_INC" ] && "$RP" -n ro.mi.xms.version.incremental "$XMS_INC"
+  [ -n "$OS_INC" ] && "$RP" ro.mi.os.version.incremental "$OS_INC"
+  [ -n "$OS_NAME" ] && "$RP" ro.mi.os.version.name "$OS_NAME"
+  [ -n "$OS_CODE" ] && "$RP" ro.mi.os.version.code "$OS_CODE"
+  [ -n "$BUILD_INC" ] && "$RP" ro.build.version.incremental "$BUILD_INC"
+  [ -n "$SYS_INC" ] && "$RP" ro.system.build.version.incremental "$SYS_INC"
+  [ -n "$XMS_INC" ] && "$RP" ro.mi.xms.version.incremental "$XMS_INC"
   sleep 10
-  [ -n "$OS_INC" ] && "$RP" -n ro.mi.os.version.incremental "$OS_INC"
-  [ -n "$OS_NAME" ] && "$RP" -n ro.mi.os.version.name "$OS_NAME"
-  [ -n "$OS_CODE" ] && "$RP" -n ro.mi.os.version.code "$OS_CODE"
-  [ -n "$BUILD_INC" ] && "$RP" -n ro.build.version.incremental "$BUILD_INC"
-  [ -n "$SYS_INC" ] && "$RP" -n ro.system.build.version.incremental "$SYS_INC"
-  [ -n "$XMS_INC" ] && "$RP" -n ro.mi.xms.version.incremental "$XMS_INC"
+  [ -n "$OS_INC" ] && "$RP" ro.mi.os.version.incremental "$OS_INC"
+  [ -n "$OS_NAME" ] && "$RP" ro.mi.os.version.name "$OS_NAME"
+  [ -n "$OS_CODE" ] && "$RP" ro.mi.os.version.code "$OS_CODE"
+  [ -n "$BUILD_INC" ] && "$RP" ro.build.version.incremental "$BUILD_INC"
+  [ -n "$SYS_INC" ] && "$RP" ro.system.build.version.incremental "$SYS_INC"
+  [ -n "$XMS_INC" ] && "$RP" ro.mi.xms.version.incremental "$XMS_INC"
 ) &
 exit 0
